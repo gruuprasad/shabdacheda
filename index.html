@@ -19,16 +19,16 @@
 :root{--paper:#f6f0df;--ink:#2c2419;--line:#bfb39d;--leaf:#49743d;--sun:#bb8b28;--ash:#766f65;--card:#fffdf7}
 *{box-sizing:border-box} body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -15%,#fffdf6 0 30%,transparent 56%),var(--paper);color:var(--ink);font-family:"Noto Serif Kannada",serif;text-align:center}
 header{padding:28px 16px 20px;border-bottom:1px solid var(--line)} h1{margin:0;font-size:clamp(2rem,6vw,3rem);letter-spacing:-.06em} header p{margin:7px 0 0;color:#665c4c;font-size:.95rem}
-main{width:min(100%,500px);margin:auto;padding:22px 16px} #board{display:grid;grid-template-columns:repeat(5,minmax(48px,64px));gap:7px;justify-content:center;margin:14px auto 21px}.tile{aspect-ratio:1;border:2px solid var(--line);border-radius:3px;background:var(--card);display:grid;place-items:center;font-size:clamp(1.35rem,5vw,1.8rem);font-weight:700}.filled{border-color:#756b59}.correct{background:var(--leaf);border-color:var(--leaf);color:#fff}.present{background:var(--sun);border-color:var(--sun);color:#fff}.absent{background:var(--ash);border-color:var(--ash);color:#fff}
-form{display:flex;gap:8px;justify-content:center}input,button{font:inherit}#entry{width:min(100%,260px);padding:10px 12px;border:1px solid #827865;border-radius:4px;background:var(--card);color:var(--ink);font-size:1.2rem;text-align:center}button{border:0;border-radius:4px;padding:10px 14px;background:var(--ink);color:#fff;cursor:pointer}button:hover{filter:brightness(1.18)}button:focus-visible,input:focus-visible{outline:3px solid #d59e33;outline-offset:2px}#message{min-height:31px;margin:15px 0 7px;font-weight:700}#restart{margin-top:4px;background:transparent;color:var(--ink);text-decoration:underline;text-underline-offset:4px}.meta{font-size:.83rem;color:#665c4c;margin:3px 0 0}
-@media(max-width:360px){#board{gap:5px}.tile{font-size:1.25rem}form{flex-wrap:wrap}}
+main{width:min(100%,500px);margin:auto;padding:22px 16px} #board{display:grid;grid-template-columns:repeat(5,minmax(48px,64px));gap:7px;justify-content:center;margin:14px auto 21px;cursor:text}#board:focus-visible{outline:3px solid #d59e33;outline-offset:8px}.tile{aspect-ratio:1;border:2px solid var(--line);border-radius:3px;background:var(--card);display:grid;place-items:center;font-size:clamp(1.35rem,5vw,1.8rem);font-weight:700}.filled{border-color:#756b59}.correct{background:var(--leaf);border-color:var(--leaf);color:#fff}.present{background:var(--sun);border-color:var(--sun);color:#fff}.absent{background:var(--ash);border-color:var(--ash);color:#fff}
+form{display:flex;gap:8px;justify-content:center}.input-form{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}input,button{font:inherit}#entry{width:1px;height:1px;border:0;padding:0}button{border:0;border-radius:4px;padding:10px 14px;background:var(--ink);color:#fff;cursor:pointer}button:hover{filter:brightness(1.18)}button:focus-visible,input:focus-visible{outline:3px solid #d59e33;outline-offset:2px}#message{min-height:31px;margin:15px 0 7px;font-weight:700}#restart{margin-top:4px;background:transparent;color:var(--ink);text-decoration:underline;text-underline-offset:4px}.meta{font-size:.83rem;color:#665c4c;margin:3px 0 0}
+@media(max-width:360px){#board{gap:5px}.tile{font-size:1.25rem}}
 </style>
 </head>
 <body>
-<header><h1>ಶಬ್ದಛೇದ</h1><p>ಇಂದಿನ ಐದು ಅಕ್ಷರಘಟಕಗಳ ಪದ · 8 ಅವಕಾಶಗಳು</p></header>
+<header><h1>ಶಬ್ದಛೇದ</h1><p>8 ಅವಕಾಶಗಳು</p></header>
 <main>
-  <div id="board" aria-label="ಆಟದ ಫಲಕ"></div>
-  <form id="guess-form"><input id="entry" autocomplete="off" autocapitalize="off" inputmode="text" lang="kn" aria-label="ನಿಮ್ಮ ಉತ್ತರ" placeholder="ಪದವನ್ನು ಬರೆಯಿರಿ" required><button>ನಮೂದಿಸಿ</button></form>
+  <div id="board" tabindex="0" role="group" aria-label="ಆಟದ ಫಲಕ"></div>
+  <form id="guess-form" class="input-form"><input id="entry" autocomplete="off" autocapitalize="off" inputmode="text" lang="kn" aria-label="ನಿಮ್ಮ ಉತ್ತರ" required><button type="submit">ನಮೂದಿಸಿ</button></form>
   <div id="message" role="status" aria-live="polite"></div>
   <button id="restart" type="button">ಇಂದಿನ ಆಟವನ್ನು ಪುನರಾರಂಭಿಸಿ</button>
   <p class="meta" id="day"></p>
@@ -133,7 +133,7 @@ async function load() {
       if (Array.isArray(saved) && saved.length <= 8 && saved.every(g => Array.isArray(g) && g.length === 5 && g.every(c => typeof c === 'string') && validWord(g.join('')))) guesses = saved;
     } catch { /* Ignore damaged or unavailable storage. */ }
     document.querySelector('#day').textContent = `ದಿನಾಂಕ: ${puzzle.date}`;
-    entry.value = ''; over = false; draw(); document.querySelector('#restart').disabled = false;
+    entry.value = ''; over = false; draw(); document.querySelector('#restart').disabled = false; entry.focus();
   } catch {
     puzzle = null; message.textContent = 'ಆಟವನ್ನು ಆರಂಭಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ಪುಟವನ್ನು ಮರುಲೋಡ್ ಮಾಡಿ.';
   }
@@ -147,6 +147,8 @@ form.addEventListener('submit', event => {
 });
 entry.addEventListener('keydown', event => { if (event.key === 'Enter' && event.isComposing) event.preventDefault(); });
 entry.addEventListener('input', () => { if (puzzle) draw(); });
+board.addEventListener('click', () => entry.focus());
+board.addEventListener('keydown', event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); entry.focus(); } });
 document.querySelector('#restart').onclick = () => {
   if (!puzzle) return;
   guesses = []; over = false; entry.value = ''; save(); draw(); entry.focus();
