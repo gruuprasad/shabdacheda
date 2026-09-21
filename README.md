@@ -1,6 +1,6 @@
 # ಶಬ್ದಛೇದ
 
-Static Kannada daily word game. No application server, passwords, dependencies or build step. The complete game is [shabdacheda.html](shabdacheda.html); upload that one file to static hosting.
+Static Kannada daily word game. No application server, passwords, dependencies or build step. The complete game is [index.html](index.html); upload that one file to static hosting.
 
 ## Word editor's workflow
 
@@ -11,7 +11,7 @@ In the sheet, enter a date in column A when you want to set a specific day's wor
 1. Set the sheet timezone to **Asia/Kolkata** in File → Settings.
 2. Put `Date` and `Word` in row 1. Add 300 reviewed Kannada words below them; leave Date blank for pool-only words, or fill Date to schedule a specific day.
 3. In File → Share → Publish to web, publish that sheet as **Comma-separated values (.csv)** with automatic republication enabled. Keep the sheet's edit access restricted; only the editor needs edit access.
-4. Paste the published CSV URL into `SHEET_URL` near the top of `shabdacheda.html` and upload that one file.
+4. Paste the published CSV URL into `SHEET_URL` near the top of `index.html` and upload that one file.
 
 The published sheet contains the words, so a determined visitor can inspect today's answer through browser tools. This keeps the editor workflow and maintenance minimal.
 
