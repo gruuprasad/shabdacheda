@@ -21,12 +21,32 @@
 header{padding:28px 16px 20px;border-bottom:1px solid var(--line)} h1{margin:0;font-size:clamp(2rem,6vw,3rem);letter-spacing:-.06em} header p{margin:7px 0 0;color:#665c4c;font-size:.95rem}
 main{width:min(100%,500px);margin:auto;padding:22px 16px} #board{display:grid;grid-template-columns:repeat(5,minmax(48px,64px));gap:7px;justify-content:center;margin:14px auto 21px;cursor:text}#board:focus-visible{outline:3px solid #d59e33;outline-offset:8px}.tile{aspect-ratio:1;border:2px solid var(--line);border-radius:3px;background:var(--card);display:grid;place-items:center;font-size:clamp(1.35rem,5vw,1.8rem);font-weight:700}.filled{border-color:#756b59}.correct{background:var(--leaf);border-color:var(--leaf);color:#fff}.present{background:var(--sun);border-color:var(--sun);color:#fff}.absent{background:var(--ash);border-color:var(--ash);color:#fff}@keyframes celebrate{0%,100%{transform:rotateX(0)}45%{transform:rotateX(90deg)}55%{transform:rotateX(90deg)}}.celebrate{animation:celebrate .7s ease-in-out both;animation-delay:calc(var(--i)*.1s);transform-style:preserve-3d;backface-visibility:hidden}@media(prefers-reduced-motion:reduce){.celebrate{animation:none}}
 form{display:flex;gap:8px;justify-content:center}.input-form{position:fixed;top:0;left:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none}input,button{font:inherit}#entry{width:1px;height:1px;border:0;padding:0;font-size:16px}button{border:0;border-radius:4px;padding:10px 14px;background:var(--ink);color:#fff;cursor:pointer}button:hover{filter:brightness(1.18)}button:focus-visible,input:focus-visible{outline:3px solid #d59e33;outline-offset:2px}#message{min-height:31px;margin:15px 0 7px;font-weight:700}#restart{margin-top:4px;background:transparent;color:var(--ink);text-decoration:underline;text-underline-offset:4px}.meta{font-size:.83rem;color:#665c4c;margin:3px 0 0}
-@media(max-width:600px){header{padding:18px 12px 12px}header p{margin-top:4px}main{padding:12px}#board{grid-template-columns:repeat(5,minmax(40px,52px));gap:4px;margin:10px auto 14px}.tile{font-size:1.3rem}}
+header{position:relative}.help-button{position:absolute;top:18px;right:16px;width:34px;height:34px;padding:0;border:1px solid var(--line);border-radius:50%;background:transparent;color:var(--ink);font-weight:700}.help-button:hover{background:var(--card);filter:none}dialog{width:min(92vw,430px);max-height:90dvh;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font-family:inherit;box-shadow:0 20px 60px rgb(44 36 25 / .25)}dialog::backdrop{background:rgb(44 36 25 / .58)}.help-content{position:relative;padding:24px 22px 22px;text-align:left;overflow:auto}.help-content h2{margin:0 34px 8px 0;font-size:1.7rem}.help-content h3{margin:20px 0 9px;font-size:1rem}.help-content p{margin:8px 0;line-height:1.55}.help-content ul{margin:8px 0;padding-left:22px;line-height:1.6}.close-help{position:absolute;top:10px;right:12px;padding:2px 9px;background:transparent;color:var(--ink);font-size:1.6rem;line-height:1}.close-help:hover{filter:none;background:var(--paper)}.example-row{display:flex;gap:5px;margin:9px 0 5px}.example-tile{width:47px;height:47px;border:2px solid var(--line);border-radius:3px;display:grid;place-items:center;background:var(--card);font-weight:700;font-size:1.15rem}.example-tile.correct{background:var(--leaf);border-color:var(--leaf);color:#fff}.example-tile.present{background:var(--sun);border-color:var(--sun);color:#fff}.example-tile.absent{background:var(--ash);border-color:var(--ash);color:#fff}.example-note{font-size:.9rem!important;margin:0 0 13px!important}
+@media(max-width:600px){header{padding:18px 12px 12px}header p{margin-top:4px}main{padding:12px}#board{grid-template-columns:repeat(5,minmax(40px,52px));gap:4px;margin:10px auto 14px}.tile{font-size:1.3rem}.help-button{top:14px;right:12px}}
 @media(max-width:360px){#board{gap:3px}.tile{font-size:1.2rem}}
 </style>
 </head>
 <body>
-<header><h1>ಶಬ್ದಛೇದ</h1><p>8 ಅವಕಾಶಗಳು</p></header>
+<header><h1>ಶಬ್ದಛೇದ</h1><p>8 ಅವಕಾಶಗಳು</p><button id="help" class="help-button" type="button" aria-label="ಹೇಗೆ ಆಡುವುದು" aria-haspopup="dialog">?</button></header>
+<dialog id="help-dialog" aria-labelledby="help-title">
+  <div class="help-content">
+    <button id="close-help" class="close-help" type="button" aria-label="ಮುಚ್ಚಿ">×</button>
+    <h2 id="help-title">ಹೇಗೆ ಆಡುವುದು</h2>
+    <p>8 ಅವಕಾಶಗಳಲ್ಲಿ ಇಂದಿನ ಪದವನ್ನು ಊಹಿಸಿ.</p>
+    <ul>
+      <li>ಪ್ರತಿ ಊಹೆಯೂ 5 ಕನ್ನಡ ಅಕ್ಷರಘಟಕಗಳ ಪದವಾಗಿರಲಿ.</li>
+      <li>ಫಲಕದ ಮೇಲೆ ಒತ್ತಿ, ನಿಮ್ಮ ಫೋನ್‌ನ ಕನ್ನಡ ಕೀಬೋರ್ಡ್‌ನಲ್ಲಿ ಪದವನ್ನು ಬರೆಯಿರಿ.</li>
+      <li>ಬಣ್ಣಗಳು ನಿಮ್ಮ ಊಹೆ ಎಷ್ಟು ಹತ್ತಿರವಿದೆ ಎಂದು ತೋರಿಸುತ್ತವೆ.</li>
+    </ul>
+    <h3>ಉದಾಹರಣೆಗಳು</h3>
+    <div class="example-row" aria-hidden="true"><span class="example-tile correct">ರಾ</span><span class="example-tile">ಜ</span><span class="example-tile">ಕಾ</span><span class="example-tile">ರ</span><span class="example-tile">ಣ</span></div>
+    <p class="example-note"><strong>ಹಸಿರು</strong>: ಅಕ್ಷರಘಟಕ ಸರಿಯಾದ ಜಾಗದಲ್ಲಿದೆ.</p>
+    <div class="example-row" aria-hidden="true"><span class="example-tile">ಜ</span><span class="example-tile present">ರ</span><span class="example-tile">ಕಾ</span><span class="example-tile">ಮ</span><span class="example-tile">ಣ</span></div>
+    <p class="example-note"><strong>ಹಳದಿ</strong>: ಅಕ್ಷರಘಟಕ ಪದದಲ್ಲಿದೆ, ಆದರೆ ಬೇರೆ ಜಾಗದಲ್ಲಿದೆ.</p>
+    <div class="example-row" aria-hidden="true"><span class="example-tile">ಜ</span><span class="example-tile">ಲ</span><span class="example-tile">ಕಾ</span><span class="example-tile absent">ಮ</span><span class="example-tile">ಣ</span></div>
+    <p class="example-note"><strong>ಬೂದು</strong>: ಅಕ್ಷರಘಟಕ ಪದದಲ್ಲಿಲ್ಲ.</p>
+  </div>
+</dialog>
 <main>
   <div id="board" tabindex="0" role="group" aria-label="ಆಟದ ಫಲಕ"></div>
   <form id="guess-form" class="input-form"><input id="entry" autocomplete="off" autocapitalize="off" inputmode="text" lang="kn" aria-label="ನಿಮ್ಮ ಉತ್ತರ" required><button type="submit">ನಮೂದಿಸಿ</button></form>
@@ -109,8 +129,12 @@ async function dailyPuzzle(date) {
 
 const board = document.querySelector('#board'), message = document.querySelector('#message');
 const entry = document.querySelector('#entry'), form = document.querySelector('#guess-form');
+const help = document.querySelector('#help'), helpDialog = document.querySelector('#help-dialog');
 let puzzle, guesses = [], over = false, celebrateWin = false;
 const focusEntry = () => entry.focus({preventScroll: true});
+help.addEventListener('click', () => { if (!helpDialog.open) helpDialog.showModal(); });
+document.querySelector('#close-help').addEventListener('click', () => helpDialog.close());
+helpDialog.addEventListener('click', event => { if (event.target === helpDialog) helpDialog.close(); });
 function draw() {
   board.replaceChildren();
   for (let row = 0; row < 8; row++) {
