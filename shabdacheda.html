@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="kn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ಕನ್ನಡ ಶಬ್ಧಛೇದ</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f7f7f7;color:#222;font-family:system-ui,"Noto Sans Kannada",sans-serif;text-align:center}
+header{background:#fff;border-bottom:1px solid #ddd;padding:14px}
+h1{margin:0;font-size:27px}
+#board{display:grid;grid-template-columns:repeat(5,58px);gap:6px;justify-content:center;margin:18px auto}
+.tile{width:58px;height:58px;border:2px solid #bbb;background:#fff;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:700}
+.correct{background:#6aaa64;color:#fff;border-color:#6aaa64}
+.present{background:#c9b458;color:#fff;border-color:#c9b458}
+.absent{background:#787c7e;color:#fff;border-color:#787c7e}
+#message{min-height:28px;font-weight:700;margin:8px}
+#keyboard{max-width:760px;margin:10px auto;padding:4px}
+.krow{display:flex;gap:4px;justify-content:center;margin:4px;flex-wrap:wrap}
+.key{border:0;border-radius:6px;background:#d3d6da;padding:10px 7px;min-width:39px;font-size:17px;font-weight:700;cursor:pointer}
+.key:active{transform:scale(.96)}
+.wide{padding-left:13px;padding-right:13px}
+#new{margin:8px;padding:9px 16px;border:0;border-radius:6px;background:#333;color:#fff;cursor:pointer}
+</style>
+</head>
+<body>
+<header><h1>ಕನ್ನಡ ಶಬ್ಧಛೇದ</h1><div>8 ಅವಕಾಶಗಳು</div></header>
+<div id="board"></div>
+<div id="message"></div>
+<button id="new">ಹೊಸ ಆಟ</button>
+<div id="keyboard"></div>
+<input id="entry" autocomplete="off" inputmode="text"
+       style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+
+<script>
+const ANSWER="ರಾಜಕಾರಣ";
+const WORD_LENGTH=5,MAX_ATTEMPTS=8;
+const seg=new Intl.Segmenter('kn',{granularity:'grapheme'});
+const chars=s=>[...seg.segment(s)].map(x=>x.segment);
+
+const KEY_ROWS=[
+ ["ಅ","ಆ","ಇ","ಈ","ಉ","ಊ","ಎ","ಏ","ಐ","ಒ","ಓ","ಔ"],
+ ["ಕ","ಖ","ಗ","ಘ","ಙ","ಚ","ಛ","ಜ","ಝ","ಞ","ಟ","ಠ","ಡ","ಢ","ಣ"],
+ ["ತ","ಥ","ದ","ಧ","ನ","ಪ","ಫ","ಬ","ಭ","ಮ","ಯ","ರ","ಲ"],
+ ["ವ","ಶ","ಷ","ಸ","ಹ","ಳ","ಂ","ಃ","್","ಾ","ಿ","ೀ","ು","ೂ"],
+ ["ೆ","ೇ","ೈ","ೊ","ೋ","ೌ","ೃ","DELETE","ENTER"]
+];
+
+let guesses=[],current='',over=false;
+const board=document.getElementById('board');
+const msg=document.getElementById('message');
+const keyboard=document.getElementById('keyboard');
+const entry=document.getElementById('entry');
+
+function draw(){
+  board.innerHTML='';
+  for(let r=0;r<MAX_ATTEMPTS;r++){
+    let row=guesses[r]||((r===guesses.length&&!over)?chars(current):[]);
+    for(let c=0;c<WORD_LENGTH;c++){
+      const d=document.createElement('div');
+      d.className='tile';
+      d.textContent=row[c]||'';
+      if(guesses[r]){
+        if(chars(ANSWER)[c]===guesses[r][c]) d.classList.add('correct');
+        else if(chars(ANSWER).includes(guesses[r][c])) d.classList.add('present');
+        else d.classList.add('absent');
+      }
+      board.appendChild(d);
+    }
+  }
+}
+
+function drawKeyboard(){
+  keyboard.innerHTML='';
+  KEY_ROWS.forEach(row=>{
+    const div=document.createElement('div');
+    div.className='krow';
+    row.forEach(k=>{
+      const b=document.createElement('button');
+      b.className='key'+((k==='DELETE'||k==='ENTER')?' wide':'');
+      b.textContent=k==='DELETE'?'⌫':(k==='ENTER'?'ನಮೂದಿಸಿ':k);
+      b.type='button';
+      b.onclick=()=>keyPress(k);
+      div.appendChild(b);
+    });
+    keyboard.appendChild(div);
+  });
+}
+
+function keyPress(k){
+  if(over)return;
+  if(k==='DELETE'){
+    current=chars(current).slice(0,-1).join('');
+  }else if(k==='ENTER'){
+    submit();
+    return;
+  }else{
+    // Kannada vowel signs / virama combine naturally with the preceding unit.
+    const next=current+k;
+    if(chars(next).length<=WORD_LENGTH) current=next;
+  }
+  draw();
+}
+
+function submit(){
+  const g=chars(current);
+  if(g.length!==WORD_LENGTH){
+    msg.textContent='5 ಕನ್ನಡ ಅಕ್ಷರ/ಅಕ್ಷರಘಟಕಗಳನ್ನು ನಮೂದಿಸಿ';
+    return;
+  }
+  guesses.push(g);
+  current='';
+  if(g.join('')===ANSWER){
+    over=true;
+    msg.textContent='🎉 ಸರಿಯಾದ ಉತ್ತರ!';
+  }else if(guesses.length>=MAX_ATTEMPTS){
+    over=true;
+    msg.textContent='ಆಟ ಮುಗಿದಿದೆ';
+  }else{
+    msg.textContent='';
+  }
+  draw();
+}
+
+function newGame(){
+  guesses=[];
+  current='';
+  over=false;
+  msg.textContent='';
+  draw();
+  drawKeyboard();
+}
+
+document.getElementById('new').onclick=newGame;
+
+// Physical/mobile keyboard also works, but the visible Kannada keyboard is the main input.
+entry.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();submit();}
+  else if(e.key==='Backspace'){e.preventDefault();keyPress('DELETE');}
+});
+document.addEventListener('click',()=>entry.focus());
+
+draw();
+drawKeyboard();
+entry.focus();
+</script>
+</body>
+</html>
