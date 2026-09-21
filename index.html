@@ -42,6 +42,14 @@ const segmenter = new Intl.Segmenter('kn', {granularity: 'grapheme'});
 const chars = word => [...segmenter.segment(word.normalize('NFC').trim())].map(x => x.segment);
 const validWord = word => typeof word === 'string' && /^[\u0c80-\u0cff\u200c\u200d]+$/u.test(word) && chars(word).length === 5;
 const today = () => new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Kolkata'});
+const sheetDate = value => {
+  const text = value.trim(), match = text.match(/^(\d{1,2})[/. -](\d{1,2})[/. -](\d{4})$/);
+  if (!match) return text;
+  const [, first, second, year] = match;
+  const day = Number(first) > 12 ? first : Number(second) > 12 ? second : first;
+  const month = Number(first) > 12 ? second : Number(second) > 12 ? first : second;
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+};
 
 function parseCsv(csv) {
   const rows = [], row = []; let cell = '', quoted = false;
@@ -67,7 +75,7 @@ function sheetWords(csv, date) {
   const entries = data.filter(row => row.some(Boolean)).map(row => {
     const word = (row[1] || '').normalize('NFC').trim();
     if (!validWord(word)) throw Error('Invalid Kannada word in sheet');
-    return {date: (row[0] || '').trim(), word};
+    return {date: sheetDate(row[0] || ''), word};
   });
   const matches = entries.filter(row => row.date === date);
   if (matches.length > 1) throw Error('Duplicate date in sheet');
