@@ -1,148 +1,158 @@
 <!doctype html>
+<!--
+  SHABDACHEDA MAINTAINER NOTES
+  This is the complete app. Keep it as one self-contained HTML file.
+  To update the game, edit this file and preserve the Google Sheet URL, Kannada
+  grapheme validation, eight attempts, and browser local progress. The sheet's
+  Date/Word CSV is the daily override plus fallback word pool. Do not add a
+  server, login, visible keyboard, build step, or separate JavaScript file.
+  After editing, verify the file loads as static HTML, then upload this file to
+  the existing static host. Scrambling is intentionally not used.
+-->
 <html lang="kn">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ಕನ್ನಡ ಶಬ್ಧಛೇದ</title>
+<title>ಶಬ್ದಛೇದ</title>
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#f7f7f7;color:#222;font-family:system-ui,"Noto Sans Kannada",sans-serif;text-align:center}
-header{background:#fff;border-bottom:1px solid #ddd;padding:14px}
-h1{margin:0;font-size:27px}
-#board{display:grid;grid-template-columns:repeat(5,58px);gap:6px;justify-content:center;margin:18px auto}
-.tile{width:58px;height:58px;border:2px solid #bbb;background:#fff;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:700}
-.correct{background:#6aaa64;color:#fff;border-color:#6aaa64}
-.present{background:#c9b458;color:#fff;border-color:#c9b458}
-.absent{background:#787c7e;color:#fff;border-color:#787c7e}
-#message{min-height:28px;font-weight:700;margin:8px}
-#keyboard{max-width:760px;margin:10px auto;padding:4px}
-.krow{display:flex;gap:4px;justify-content:center;margin:4px;flex-wrap:wrap}
-.key{border:0;border-radius:6px;background:#d3d6da;padding:10px 7px;min-width:39px;font-size:17px;font-weight:700;cursor:pointer}
-.key:active{transform:scale(.96)}
-.wide{padding-left:13px;padding-right:13px}
-#new{margin:8px;padding:9px 16px;border:0;border-radius:6px;background:#333;color:#fff;cursor:pointer}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+Kannada:wght@400;600;700&display=swap');
+:root{--paper:#f6f0df;--ink:#2c2419;--line:#bfb39d;--leaf:#49743d;--sun:#bb8b28;--ash:#766f65;--card:#fffdf7}
+*{box-sizing:border-box} body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% -15%,#fffdf6 0 30%,transparent 56%),var(--paper);color:var(--ink);font-family:"Noto Serif Kannada",serif;text-align:center}
+header{padding:28px 16px 20px;border-bottom:1px solid var(--line)} h1{margin:0;font-size:clamp(2rem,6vw,3rem);letter-spacing:-.06em} header p{margin:7px 0 0;color:#665c4c;font-size:.95rem}
+main{width:min(100%,500px);margin:auto;padding:22px 16px} #board{display:grid;grid-template-columns:repeat(5,minmax(48px,64px));gap:7px;justify-content:center;margin:14px auto 21px}.tile{aspect-ratio:1;border:2px solid var(--line);border-radius:3px;background:var(--card);display:grid;place-items:center;font-size:clamp(1.35rem,5vw,1.8rem);font-weight:700}.filled{border-color:#756b59}.correct{background:var(--leaf);border-color:var(--leaf);color:#fff}.present{background:var(--sun);border-color:var(--sun);color:#fff}.absent{background:var(--ash);border-color:var(--ash);color:#fff}
+form{display:flex;gap:8px;justify-content:center}input,button{font:inherit}#entry{width:min(100%,260px);padding:10px 12px;border:1px solid #827865;border-radius:4px;background:var(--card);color:var(--ink);font-size:1.2rem;text-align:center}button{border:0;border-radius:4px;padding:10px 14px;background:var(--ink);color:#fff;cursor:pointer}button:hover{filter:brightness(1.18)}button:focus-visible,input:focus-visible{outline:3px solid #d59e33;outline-offset:2px}#message{min-height:31px;margin:15px 0 7px;font-weight:700}#restart{margin-top:4px;background:transparent;color:var(--ink);text-decoration:underline;text-underline-offset:4px}.meta{font-size:.83rem;color:#665c4c;margin:3px 0 0}
+@media(max-width:360px){#board{gap:5px}.tile{font-size:1.25rem}form{flex-wrap:wrap}}
 </style>
 </head>
 <body>
-<header><h1>ಕನ್ನಡ ಶಬ್ಧಛೇದ</h1><div>8 ಅವಕಾಶಗಳು</div></header>
-<div id="board"></div>
-<div id="message"></div>
-<button id="new">ಹೊಸ ಆಟ</button>
-<div id="keyboard"></div>
-<input id="entry" autocomplete="off" inputmode="text"
-       style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-
+<header><h1>ಶಬ್ದಛೇದ</h1><p>ಇಂದಿನ ಐದು ಅಕ್ಷರಘಟಕಗಳ ಪದ · 8 ಅವಕಾಶಗಳು</p></header>
+<main>
+  <div id="board" aria-label="ಆಟದ ಫಲಕ"></div>
+  <form id="guess-form"><input id="entry" autocomplete="off" autocapitalize="off" inputmode="text" lang="kn" aria-label="ನಿಮ್ಮ ಉತ್ತರ" placeholder="ಪದವನ್ನು ಬರೆಯಿರಿ" required><button>ನಮೂದಿಸಿ</button></form>
+  <div id="message" role="status" aria-live="polite"></div>
+  <button id="restart" type="button">ಇಂದಿನ ಆಟವನ್ನು ಪುನರಾರಂಭಿಸಿ</button>
+  <p class="meta" id="day"></p>
+</main>
 <script>
-const ANSWER="ರಾಜಕಾರಣ";
-const WORD_LENGTH=5,MAX_ATTEMPTS=8;
-const seg=new Intl.Segmenter('kn',{granularity:'grapheme'});
-const chars=s=>[...seg.segment(s)].map(x=>x.segment);
+// Paste the Google Sheet's published CSV URL here.
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcXkMfc4YcWYCQMqljJcMK53vqMSpSkfFvxUDoRrf6zGbgOSMFUjpFTUJxpmz-t2SjKGDTs1vHN6hU/pub?gid=0&single=true&output=csv';
+const WORDS = ['ರಾಜಕಾರಣ', 'ಅಡುಗೆಮನೆ', 'ನಾಗರಿಕತೆ', 'ಪರಿಸರದ', 'ಬೆಳವಣಿಗೆ'];
+const segmenter = new Intl.Segmenter('kn', {granularity: 'grapheme'});
+const chars = word => [...segmenter.segment(word.normalize('NFC').trim())].map(x => x.segment);
+const validWord = word => typeof word === 'string' && /^[\u0c80-\u0cff\u200c\u200d]+$/u.test(word) && chars(word).length === 5;
+const today = () => new Date().toLocaleDateString('en-CA', {timeZone: 'Asia/Kolkata'});
 
-const KEY_ROWS=[
- ["ಅ","ಆ","ಇ","ಈ","ಉ","ಊ","ಎ","ಏ","ಐ","ಒ","ಓ","ಔ"],
- ["ಕ","ಖ","ಗ","ಘ","ಙ","ಚ","ಛ","ಜ","ಝ","ಞ","ಟ","ಠ","ಡ","ಢ","ಣ"],
- ["ತ","ಥ","ದ","ಧ","ನ","ಪ","ಫ","ಬ","ಭ","ಮ","ಯ","ರ","ಲ"],
- ["ವ","ಶ","ಷ","ಸ","ಹ","ಳ","ಂ","ಃ","್","ಾ","ಿ","ೀ","ು","ೂ"],
- ["ೆ","ೇ","ೈ","ೊ","ೋ","ೌ","ೃ","DELETE","ENTER"]
-];
+function parseCsv(csv) {
+  const rows = [], row = []; let cell = '', quoted = false;
+  for (let i = 0; i < csv.length; i++) {
+    const character = csv[i];
+    if (quoted) {
+      if (character === '"' && csv[i + 1] === '"') { cell += '"'; i++; }
+      else if (character === '"') quoted = false;
+      else cell += character;
+    } else if (character === '"' && cell === '') quoted = true;
+    else if (character === ',') { row.push(cell.trim()); cell = ''; }
+    else if (character === '\n') { row.push(cell.trim()); if (row.some(Boolean)) rows.push([...row]); row.length = 0; cell = ''; }
+    else if (character !== '\r') cell += character;
+  }
+  if (cell || row.length) { row.push(cell.trim()); if (row.some(Boolean)) rows.push(row); }
+  return rows;
+}
+function sheetWords(csv, date) {
+  const rows = parseCsv(csv);
+  if (!rows.length) return null;
+  const firstCell = rows[0][0].replace(/^\ufeff/, '').toLowerCase();
+  const data = firstCell === 'date' ? rows.slice(1) : rows;
+  const entries = data.filter(row => row.some(Boolean)).map(row => {
+    const word = (row[1] || '').normalize('NFC').trim();
+    if (!validWord(word)) throw Error('Invalid Kannada word in sheet');
+    return {date: (row[0] || '').trim(), word};
+  });
+  const matches = entries.filter(row => row.date === date);
+  if (matches.length > 1) throw Error('Duplicate date in sheet');
+  return {override: matches[0]?.word || null, words: [...new Set(entries.map(row => row.word))]};
+}
 
-let guesses=[],current='',over=false;
-const board=document.getElementById('board');
-const msg=document.getElementById('message');
-const keyboard=document.getElementById('keyboard');
-const entry=document.getElementById('entry');
+function marksFor(guess, answer) {
+  const remaining = [...answer], marks = answer.map(() => 'absent');
+  guess.forEach((letter, i) => { if (letter === answer[i]) { marks[i] = 'correct'; remaining[i] = null; } });
+  guess.forEach((letter, i) => {
+    if (marks[i] === 'correct') return;
+    const index = remaining.indexOf(letter);
+    if (index >= 0) { marks[i] = 'present'; remaining[index] = null; }
+  });
+  return marks;
+}
 
-function draw(){
-  board.innerHTML='';
-  for(let r=0;r<MAX_ATTEMPTS;r++){
-    let row=guesses[r]||((r===guesses.length&&!over)?chars(current):[]);
-    for(let c=0;c<WORD_LENGTH;c++){
-      const d=document.createElement('div');
-      d.className='tile';
-      d.textContent=row[c]||'';
-      if(guesses[r]){
-        if(chars(ANSWER)[c]===guesses[r][c]) d.classList.add('correct');
-        else if(chars(ANSWER).includes(guesses[r][c])) d.classList.add('present');
-        else d.classList.add('absent');
-      }
-      board.appendChild(d);
+async function dailyPuzzle(date) {
+  let word, sheetPool = [];
+  if (SHEET_URL) {
+    const response = await fetch(SHEET_URL, {signal: AbortSignal.timeout(10000)});
+    if (!response.ok) throw Error('Sheet unavailable');
+    const result = sheetWords(await response.text(), date);
+    word = result?.override;
+    sheetPool = result?.words || [];
+  }
+  const pool = sheetPool.length ? sheetPool : WORDS;
+  word ||= pool[Math.floor(Date.parse(date + 'T00:00:00Z') / 86400000) % pool.length];
+  return {date, word, id: `${date}:${word}`};
+}
+
+const board = document.querySelector('#board'), message = document.querySelector('#message');
+const entry = document.querySelector('#entry'), form = document.querySelector('#guess-form');
+let puzzle, guesses = [], over = false;
+function draw() {
+  board.replaceChildren();
+  for (let row = 0; row < 8; row++) {
+    const letters = guesses[row] || (row === guesses.length && !over ? chars(entry.value) : []);
+    const marks = guesses[row] ? marksFor(letters, chars(puzzle.word)) : [];
+    for (let column = 0; column < 5; column++) {
+      const tile = document.createElement('div');
+      tile.className = `tile ${marks[column] || (letters[column] ? 'filled' : '')}`;
+      tile.textContent = letters[column] || '';
+      const labels = {correct: 'ಸರಿಯಾದ ಸ್ಥಾನ', present: 'ಬೇರೆ ಸ್ಥಾನ', absent: 'ಪದದಲ್ಲಿಲ್ಲ'};
+      if (marks[column]) tile.setAttribute('aria-label', `${letters[column]}: ${labels[marks[column]]}`);
+      board.append(tile);
     }
   }
+  const won = guesses.some(guess => guess.join('') === puzzle.word);
+  over = won || guesses.length >= 8;
+  entry.disabled = over; form.querySelector('button').disabled = over;
+  message.textContent = won ? '🎉 ಸರಿಯಾದ ಉತ್ತರ!' : over ? `ಇಂದಿನ ಪದ: ${puzzle.word}` : '';
 }
-
-function drawKeyboard(){
-  keyboard.innerHTML='';
-  KEY_ROWS.forEach(row=>{
-    const div=document.createElement('div');
-    div.className='krow';
-    row.forEach(k=>{
-      const b=document.createElement('button');
-      b.className='key'+((k==='DELETE'||k==='ENTER')?' wide':'');
-      b.textContent=k==='DELETE'?'⌫':(k==='ENTER'?'ನಮೂದಿಸಿ':k);
-      b.type='button';
-      b.onclick=()=>keyPress(k);
-      div.appendChild(b);
-    });
-    keyboard.appendChild(div);
-  });
+function save() {
+  try { localStorage.setItem(`shabdacheda:${puzzle.id}`, JSON.stringify(guesses)); } catch { /* Play works without storage. */ }
 }
-
-function keyPress(k){
-  if(over)return;
-  if(k==='DELETE'){
-    current=chars(current).slice(0,-1).join('');
-  }else if(k==='ENTER'){
-    submit();
-    return;
-  }else{
-    // Kannada vowel signs / virama combine naturally with the preceding unit.
-    const next=current+k;
-    if(chars(next).length<=WORD_LENGTH) current=next;
+async function load() {
+  entry.disabled = true; form.querySelector('button').disabled = true;
+  document.querySelector('#restart').disabled = true;
+  try {
+    puzzle = await dailyPuzzle(today()); guesses = [];
+    try {
+      const saved = JSON.parse(localStorage.getItem(`shabdacheda:${puzzle.id}`));
+      if (Array.isArray(saved) && saved.length <= 8 && saved.every(g => Array.isArray(g) && g.length === 5 && g.every(c => typeof c === 'string') && validWord(g.join('')))) guesses = saved;
+    } catch { /* Ignore damaged or unavailable storage. */ }
+    document.querySelector('#day').textContent = `ದಿನಾಂಕ: ${puzzle.date}`;
+    entry.value = ''; over = false; draw(); document.querySelector('#restart').disabled = false;
+  } catch {
+    puzzle = null; message.textContent = 'ಆಟವನ್ನು ಆರಂಭಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ಪುಟವನ್ನು ಮರುಲೋಡ್ ಮಾಡಿ.';
   }
-  draw();
 }
-
-function submit(){
-  const g=chars(current);
-  if(g.length!==WORD_LENGTH){
-    msg.textContent='5 ಕನ್ನಡ ಅಕ್ಷರ/ಅಕ್ಷರಘಟಕಗಳನ್ನು ನಮೂದಿಸಿ';
-    return;
-  }
-  guesses.push(g);
-  current='';
-  if(g.join('')===ANSWER){
-    over=true;
-    msg.textContent='🎉 ಸರಿಯಾದ ಉತ್ತರ!';
-  }else if(guesses.length>=MAX_ATTEMPTS){
-    over=true;
-    msg.textContent='ಆಟ ಮುಗಿದಿದೆ';
-  }else{
-    msg.textContent='';
-  }
-  draw();
-}
-
-function newGame(){
-  guesses=[];
-  current='';
-  over=false;
-  msg.textContent='';
-  draw();
-  drawKeyboard();
-}
-
-document.getElementById('new').onclick=newGame;
-
-// Physical/mobile keyboard also works, but the visible Kannada keyboard is the main input.
-entry.addEventListener('keydown',e=>{
-  if(e.key==='Enter'){e.preventDefault();submit();}
-  else if(e.key==='Backspace'){e.preventDefault();keyPress('DELETE');}
+form.addEventListener('submit', event => {
+  event.preventDefault(); if (!puzzle || over) return;
+  if (today() !== puzzle.date) { load(); return; }
+  const word = entry.value.trim().normalize('NFC');
+  if (!validWord(word)) { message.textContent = '5 ಕನ್ನಡ ಅಕ್ಷರಘಟಕಗಳ ಪದವನ್ನು ಬರೆಯಿರಿ'; return; }
+  guesses.push(chars(word)); entry.value = ''; save(); draw();
 });
-document.addEventListener('click',()=>entry.focus());
-
-draw();
-drawKeyboard();
-entry.focus();
+entry.addEventListener('keydown', event => { if (event.key === 'Enter' && event.isComposing) event.preventDefault(); });
+entry.addEventListener('input', () => { if (puzzle) draw(); });
+document.querySelector('#restart').onclick = () => {
+  if (!puzzle) return;
+  guesses = []; over = false; entry.value = ''; save(); draw(); entry.focus();
+};
+document.addEventListener('visibilitychange', () => { if (!document.hidden && puzzle && today() !== puzzle.date) load(); });
+load();
 </script>
 </body>
 </html>
